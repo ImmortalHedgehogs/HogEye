@@ -1,0 +1,31 @@
+# permissions for end users to edit hogeyes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: hogeye-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: hogeye
+    app.kubernetes.io/part-of: hogeye
+    app.kubernetes.io/managed-by: kustomize
+  name: hogeye-editor-role
+rules:
+- apiGroups:
+  - hog.immortal.hedgehogs
+  resources:
+  - hogeyes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hog.immortal.hedgehogs
+  resources:
+  - hogeyes/status
+  verbs:
+  - get

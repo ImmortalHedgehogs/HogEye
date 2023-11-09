@@ -1,0 +1,27 @@
+# permissions for end users to view hogeyes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: hogeye-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: hogeye
+    app.kubernetes.io/part-of: hogeye
+    app.kubernetes.io/managed-by: kustomize
+  name: hogeye-viewer-role
+rules:
+- apiGroups:
+  - hog.immortal.hedgehogs
+  resources:
+  - hogeyes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - hog.immortal.hedgehogs
+  resources:
+  - hogeyes/status
+  verbs:
+  - get

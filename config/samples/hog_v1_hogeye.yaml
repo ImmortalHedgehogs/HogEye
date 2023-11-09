@@ -1,0 +1,12 @@
+apiVersion: hog.immortal.hedgehogs/v1
+kind: HogEye
+metadata:
+  labels:
+    app.kubernetes.io/name: hogeye
+    app.kubernetes.io/instance: hogeye-sample
+    app.kubernetes.io/part-of: hogeye
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: hogeye
+  name: hogeye-sample
+spec:
+  # TODO(user): Add fields here

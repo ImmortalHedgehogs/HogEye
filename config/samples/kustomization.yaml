@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- hog_v1_hogeye.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

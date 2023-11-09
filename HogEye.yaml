@@ -1,0 +1,10 @@
+apiVersion: hog.immortal.hedgehogs/v1
+kind: HogEye
+metadata:
+  name: the-eye
+spec:
+  slackChannels: "#flywheel"
+  queryNamespace: default
+  queryResources: pods
+  queryTime: "0 8 * * *"
+  ageThreshold: 48
