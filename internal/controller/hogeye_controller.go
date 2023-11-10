@@ -129,6 +129,8 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 }
 
 func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deployment, error) {
+	// hogeye.Spec.
+
 	replicaCount := int32(1)
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -153,6 +155,24 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 						{
 							Name:  "web",
 							Image: "nginx:1.12",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "SLACKCHANNEL",
+									Value: hogeye.Spec.SlackChannels,
+								},
+								{
+									Name:  "RESOURCE",
+									Value: hogeye.Spec.QueryResources,
+								},
+								{
+									Name:  "NAMESPACE",
+									Value: hogeye.Spec.QueryNamespace,
+								},
+								{
+									Name:  "AGETHRESHOLD",
+									Value: hogeye.Spec.SlackChannels,
+								},
+							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
