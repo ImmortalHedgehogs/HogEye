@@ -3,7 +3,9 @@ kind: HogEye
 metadata:
   name: the-eye
 spec:
-  slackChannels: "#flywheel"
+  appTokenSecret: "appSecret"
+  botTokenSecret: "botSecret"
+  slackChannels: "#phony"
   queryNamespace: default
   queryResources: pods
   queryTime: "0 8 * * *"
