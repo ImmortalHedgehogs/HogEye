@@ -101,8 +101,25 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to find deployment")
 			}
 		} else {
-			// We found the job, update it
-			log.Info("In else")
+			// We found the job, update it (by update we mean tear down old and make a new one...)
+
+			if err := r.deleteExternalResources(ctx, *hogeye); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+
+			// The Job does not exist, so create it
+			deployment, err := r.createDeployment(*hogeye)
+			if err != nil {
+				log.Error(err, "failed to create Deployment Spec")
+				return ctrl.Result{}, client.IgnoreNotFound(err)
+			}
+			if err := r.Create(ctx, &deployment); err != nil {
+				log.Error(err, "unable to create Deployment")
+			}
+
+			log.Info("Updated")
 		}
 
 	} else {
@@ -157,6 +174,14 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 							Name:  "web",
 							Image: "nginx:1.12",
 							Env: []corev1.EnvVar{
+								{
+									Name:  "APPSECRET",
+									Value: hogeye.Spec.AppTokenSecret,
+								},
+								{
+									Name:  "BOTSECRET",
+									Value: hogeye.Spec.BotTokenSecret,
+								},
 								{
 									Name:  "SLACKCHANNEL",
 									Value: hogeye.Spec.SlackChannels,
