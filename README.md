@@ -12,6 +12,11 @@
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
+### Notes on Deployment and Running
+If you're running this using ```make run```, make sure to run ```export ENABLE_WEBHOOKS=false``` first, otherwise it will error out.
+
+Make sure to install cert-manager to your cluster before running ```make deploy``` using ```kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml```. Also make sure you're specifying an image in your make deploy, like so: ```make deploy IMG=<some-registry>/<project-name>:tag```
+
 ### To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
 
