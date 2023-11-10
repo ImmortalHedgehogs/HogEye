@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -170,7 +171,11 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 								},
 								{
 									Name:  "AGETHRESHOLD",
-									Value: hogeye.Spec.SlackChannels,
+									Value: fmt.Sprint(hogeye.Spec.AgeThreshold),
+								},
+								{
+									Name:  "QUERYTIME",
+									Value: hogeye.Spec.QueryTime,
 								},
 							},
 							Ports: []corev1.ContainerPort{
