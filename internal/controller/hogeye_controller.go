@@ -96,7 +96,16 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 				if err := r.Create(ctx, &deployment); err != nil {
 					log.Error(err, "unable to create Deployment")
+					hogeye.Status.Status = "Error"
+				} else {
+					hogeye.Status.Status = "Watching"
 				}
+				if err := r.Status().Update(ctx, hogeye); err != nil {
+					log.Error(err, "unable to update HogEye status")
+					return ctrl.Result{}, err
+				}
+				return ctrl.Result{}, nil
+
 			} else {
 				// handle error
 				log.Error(err, "unable to find deployment")
@@ -109,6 +118,11 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				// so that it can be retried
 				return ctrl.Result{}, err
 			}
+			hogeye.Status.Status = "Redeploying"
+			if err := r.Status().Update(ctx, hogeye); err != nil {
+				log.Error(err, "unable to update HogEye status")
+				return ctrl.Result{}, err
+			}
 
 			// The Job does not exist, so create it
 			deployment, err := r.createDeployment(*hogeye)
@@ -118,12 +132,25 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			}
 			if err := r.Create(ctx, &deployment); err != nil {
 				log.Error(err, "unable to create Deployment")
+				hogeye.Status.Status = "Error"
+			} else {
+				hogeye.Status.Status = "Watching"
 			}
-
+			if err := r.Status().Update(ctx, hogeye); err != nil {
+				log.Error(err, "unable to update HogEye status")
+				return ctrl.Result{}, err
+			}
 			log.Info("Updated")
+			return ctrl.Result{}, nil
+
 		}
 
 	} else {
+		hogeye.Status.Status = "Terminating"
+		if err := r.Status().Update(ctx, hogeye); err != nil {
+			log.Error(err, "unable to update HogEye status")
+			return ctrl.Result{}, err
+		}
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(hogeye, hogeyeFinalizer) {
 			// our finalizer is present, so lets handle any external dependency
