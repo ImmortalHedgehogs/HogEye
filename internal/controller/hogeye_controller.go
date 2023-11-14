@@ -172,17 +172,19 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "web",
-							Image: "nginx:1.12",
+							Name:            "hogeye",
+							Image:           "traviskroll/hogeye:v1",
+							ImagePullPolicy: "Always",
+							EnvFrom: []corev1.EnvFromSource{
+								{
+									SecretRef: &corev1.SecretEnvSource{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: hogeye.Spec.AppTokenSecret,
+										},
+									},
+								},
+							},
 							Env: []corev1.EnvVar{
-								{
-									Name:  "APPSECRET",
-									Value: hogeye.Spec.AppTokenSecret,
-								},
-								{
-									Name:  "BOTSECRET",
-									Value: hogeye.Spec.BotTokenSecret,
-								},
 								{
 									Name:  "SLACKCHANNEL",
 									Value: hogeye.Spec.SlackChannels,
@@ -208,7 +210,7 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 								{
 									Name:          "http",
 									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: 80,
+									ContainerPort: 3000,
 								},
 							},
 						},

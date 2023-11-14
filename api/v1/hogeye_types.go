@@ -28,7 +28,6 @@ type HogEyeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	AppTokenSecret string `json:"appTokenSecret,omitempty"`
-	BotTokenSecret string `json:"botTokenSecret,omitempty"`
 	SlackChannels  string `json:"slackChannels,omitempty"`
 	QueryNamespace string `json:"queryNamespace,omitempty"`
 	QueryResources string `json:"queryResources,omitempty"`
