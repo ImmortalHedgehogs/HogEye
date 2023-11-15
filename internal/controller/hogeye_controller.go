@@ -104,7 +104,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 					log.Error(err, "unable to update HogEye status 0")
 					return ctrl.Result{}, err
 				}
-				return ctrl.Result{}, nil
+				log.Info("Created")
 
 			} else {
 				// handle error
@@ -116,11 +116,6 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			if err := r.deleteExternalResources(ctx, *hogeye); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
-				return ctrl.Result{}, err
-			}
-			hogeye.Status.Status = "Redeploying"
-			if err := r.Status().Update(ctx, hogeye); err != nil {
-				log.Error(err, "unable to update HogEye status 1")
 				return ctrl.Result{}, err
 			}
 
@@ -140,11 +135,8 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to update HogEye status 2")
 				return ctrl.Result{}, err
 			}
-			//log.Info("Updated")
-			return ctrl.Result{}, nil
-
+			log.Info("Updated")
 		}
-
 	} else {
 		hogeye.Status.Status = "Terminating"
 		if err := r.Status().Update(ctx, hogeye); err != nil {
@@ -168,7 +160,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		// Stop reconciliation as the item is being deleted
-		return ctrl.Result{}, nil
+		log.Info("Deleted")
 	}
 
 	return ctrl.Result{}, nil
