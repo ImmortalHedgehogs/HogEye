@@ -83,11 +83,11 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			Namespace: hogeye.Namespace,
 		}
 
-		// Check if the Job exists before attempting to create it
+		// Check if the Deployment exists before attempting to create it
 		var existingDeployment appsv1.Deployment
 		if err := r.Get(ctx, deploymentKey, &existingDeployment); err != nil {
 			if client.IgnoreNotFound(err) == nil {
-				// The Job does not exist, so create it
+				// The Deployment does not exist, so create it
 				deployment, err := r.createDeployment(*hogeye)
 				if err != nil {
 					log.Error(err, "failed to create Deployment Spec")
@@ -101,7 +101,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 					hogeye.Status.Status = "Watching"
 				}
 				if err := r.Status().Update(ctx, hogeye); err != nil {
-					log.Error(err, "unable to update HogEye status")
+					log.Error(err, "unable to update HogEye status 0")
 					return ctrl.Result{}, err
 				}
 				return ctrl.Result{}, nil
@@ -120,7 +120,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			}
 			hogeye.Status.Status = "Redeploying"
 			if err := r.Status().Update(ctx, hogeye); err != nil {
-				log.Error(err, "unable to update HogEye status")
+				log.Error(err, "unable to update HogEye status 1")
 				return ctrl.Result{}, err
 			}
 
@@ -137,10 +137,10 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				hogeye.Status.Status = "Watching"
 			}
 			if err := r.Status().Update(ctx, hogeye); err != nil {
-				log.Error(err, "unable to update HogEye status")
+				log.Error(err, "unable to update HogEye status 2")
 				return ctrl.Result{}, err
 			}
-			log.Info("Updated")
+			//log.Info("Updated")
 			return ctrl.Result{}, nil
 
 		}
@@ -148,7 +148,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	} else {
 		hogeye.Status.Status = "Terminating"
 		if err := r.Status().Update(ctx, hogeye); err != nil {
-			log.Error(err, "unable to update HogEye status")
+			log.Error(err, "unable to update HogEye status 3")
 			return ctrl.Result{}, err
 		}
 		// The object is being deleted
