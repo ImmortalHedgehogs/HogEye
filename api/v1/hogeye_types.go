@@ -37,12 +37,16 @@ type HogEyeSpec struct {
 
 // HogEyeStatus defines the observed state of HogEye
 type HogEyeStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Status string `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`,description="Will display one of [Watching, Redeploying, Terminating, Error]"
+//+kubebuilder:printcolumn:name="Resource_Type",type=string,JSONPath=`.spec.queryResources`
+//+kubebuilder:printcolumn:name="Observed_Namespace",type=string,JSONPath=`.spec.queryNamespace`
+//+kubebuilder:printcolumn:name="Age_Threshold",type=string,JSONPath=`.spec.ageThreshold`
+//+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // HogEye is the Schema for the hogeyes API
 type HogEye struct {
