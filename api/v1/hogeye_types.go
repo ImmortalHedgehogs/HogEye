@@ -43,6 +43,11 @@ type HogEyeStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`,description="Will display one of [Watching, Redeploying, Terminating, Error]"
+// +kubebuilder:printcolumn:name="Resource Type",type=string,JSONPath=`.spec.queryResources`
+// +kubebuilder:printcolumn:name="Observed Namespace",type=string,JSONPath=`.spec.queryNamespace`
+// +kubebuilder:printcolumn:name="Age Threshold",type=string,JSONPath=`.spec.ageThreshold`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // HogEye is the Schema for the hogeyes API
 type HogEye struct {

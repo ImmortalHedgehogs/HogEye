@@ -14,7 +14,24 @@ spec:
     singular: hogeye
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - description: Will display one of [Watching, Redeploying, Terminating, Error]
+      jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .spec.queryResources
+      name: Resource Type
+      type: string
+    - jsonPath: .spec.queryNamespace
+      name: Observed Namespace
+      type: string
+    - jsonPath: .spec.ageThreshold
+      name: Age Threshold
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
     schema:
       openAPIV3Schema:
         description: HogEye is the Schema for the hogeyes API
