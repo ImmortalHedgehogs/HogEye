@@ -20,13 +20,13 @@ spec:
       name: Status
       type: string
     - jsonPath: .spec.queryResources
-      name: Resource Type
+      name: Resource_Type
       type: string
     - jsonPath: .spec.queryNamespace
-      name: Observed Namespace
+      name: Observed_Namespace
       type: string
     - jsonPath: .spec.ageThreshold
-      name: Age Threshold
+      name: Age_Threshold
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
