@@ -7,5 +7,5 @@ spec:
   slackChannels: "U051DPPFNNT"
   queryNamespace: default
   queryResources: pods
-  queryTime: "31 16 * * *"
-  ageThreshold: 1
+  queryTime: "23 16 * * *"
+  ageThreshold: 0
