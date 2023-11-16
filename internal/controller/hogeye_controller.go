@@ -44,6 +44,8 @@ type HogEyeReconciler struct {
 //+kubebuilder:rbac:groups=hog.immortal.hedgehogs,resources=hogeyes/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
+//+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -108,6 +110,7 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to find deployment")
 			}
 		} else {
+			log.Error(err, "DEBUGGGGGGGG THISSSSSS:")
 			// We found the job, update it (by update we mean tear down old and make a new one...)
 
 			if err := r.deleteExternalResources(ctx, *hogeye); err != nil {
@@ -302,18 +305,30 @@ func (r *HogEyeReconciler) createExternalResources(ctx context.Context, hogeye h
 	if err != nil {
 		log.Error(err, "Failed to create service account")
 		allErrs = append(allErrs, err)
+	} else {
+		if err := controllerutil.SetControllerReference(&hogeye, &serviceAccount, r.Scheme); err != nil {
+			allErrs = append(allErrs, err)
+		}
 	}
 
 	role, err := r.createRole(hogeye)
 	if err != nil {
 		log.Error(err, "Failed to create role")
 		allErrs = append(allErrs, err)
+	} else {
+		if err := controllerutil.SetControllerReference(&hogeye, &role, r.Scheme); err != nil {
+			allErrs = append(allErrs, err)
+		}
 	}
 
 	roleBinding, err := r.createRoleBinding(hogeye)
 	if err != nil {
 		log.Error(err, "Failed to create role binding")
 		allErrs = append(allErrs, err)
+	} else {
+		if err := controllerutil.SetControllerReference(&hogeye, &roleBinding, r.Scheme); err != nil {
+			allErrs = append(allErrs, err)
+		}
 	}
 
 	// apply service account, role, and role binding
@@ -336,8 +351,11 @@ func (r *HogEyeReconciler) createExternalResources(ctx context.Context, hogeye h
 	if err != nil {
 		log.Error(err, "failed to create Deployment Spec")
 		allErrs = append(allErrs, err)
+	} else {
+		if err := controllerutil.SetControllerReference(&hogeye, &deployment, r.Scheme); err != nil {
+			allErrs = append(allErrs, err)
+		}
 	}
-
 	if err := r.Create(ctx, &deployment); err != nil {
 		log.Error(err, "unable to create Deployment")
 		allErrs = append(allErrs, err)
@@ -417,5 +435,9 @@ func (r *HogEyeReconciler) deleteExternalResources(ctx context.Context, hogeye h
 func (r *HogEyeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hogv1.HogEye{}).
+		// Owns(&corev1.ServiceAccount{}).
+		// Owns(&rbacv1.Role{}).
+		// Owns(&rbacv1.RoleBinding{}).
+		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
