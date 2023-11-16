@@ -127,6 +127,8 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 					// so that it can be retried
 					return ctrl.Result{}, err
 				}
+				hogeye.Status.Status = "Watching"
+				r.Status().Update(ctx, hogeye)
 				log.Info("Updated")
 			}
 
@@ -155,19 +157,8 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 						return ctrl.Result{}, err
 					}
 
-					deployment, err := r.createDeployment(*hogeye)
-					if err != nil {
-						log.Error(err, "Unable to create updated deployment")
-						hogeye.Status.Status = "Error"
-						r.Status().Update(ctx, hogeye)
-						return ctrl.Result{}, err
-					}
-
-					existingDeployment.Spec = deployment.Spec
-					if err := r.Update(ctx, &existingDeployment); err != nil {
-						// if fail to delete the external dependency here, return with error
-						// so that it can be retried
-						return ctrl.Result{}, err
+					if err := r.Delete(ctx, &existingDeployment); err != nil {
+						log.Error(err, "unable to delete Deployment")
 					}
 				}
 			}
@@ -224,9 +215,12 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				}
 			}
 
-			if err := r.Status().Update(ctx, hogeye); err != nil {
-				log.Error(err, "unable to update HogEye status 0")
-				return ctrl.Result{}, err
+			if hogeye.Status.Status != "Watching" {
+				hogeye.Status.Status = "Watching"
+				if err := r.Status().Update(ctx, hogeye); err != nil {
+					log.Error(err, "unable to update HogEye status 0")
+					return ctrl.Result{}, err
+				}
 			}
 		}
 	} else {
@@ -351,10 +345,6 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 								{
 									Name:  "SLACKCHANNEL",
 									Value: hogeye.Spec.SlackChannels,
-								},
-								{
-									Name:  "RESOURCE",
-									Value: hogeye.Spec.QueryResources,
 								},
 								{
 									Name:  "NAMESPACE",

@@ -6,6 +6,5 @@ spec:
   appTokenSecret: "hogeye-secrets"
   slackChannels: "U051DPPFNNT"
   queryNamespace: default
-  queryResources: pods
-  queryTime: "23 16 * * *"
+  queryTime: "42 14 * * *"
   ageThreshold: 0

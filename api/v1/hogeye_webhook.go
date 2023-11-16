@@ -52,10 +52,6 @@ func (r *HogEye) Default() {
 		r.Spec.QueryTime = "0 16 * * 1-5"
 	}
 
-	if r.Spec.QueryResources == "" {
-		r.Spec.QueryResources = "pods"
-	}
-
 	if r.Spec.QueryNamespace == "" {
 		r.Spec.QueryNamespace = "default"
 	}
