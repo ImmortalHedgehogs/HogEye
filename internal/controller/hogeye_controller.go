@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -110,32 +111,123 @@ func (r *HogEyeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				log.Error(err, "unable to find deployment")
 			}
 		} else {
-			log.Error(err, "DEBUGGGGGGGG THISSSSSS:")
-			// We found the job, update it (by update we mean tear down old and make a new one...)
-
-			if err := r.deleteExternalResources(ctx, *hogeye); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return ctrl.Result{}, err
-			}
-
-			// The Job does not exist, so create it
-			//create service account, role, and role binding for the deployment pods
-			// The Deployment does not exist, so create it
-			if err := r.createExternalResources(ctx, *hogeye); err != nil {
-				log.Error(err, "Unable to create external resources")
+			// UPDATING DEPLOYMENT IF NEEDED
+			deployment, err := r.createDeployment(*hogeye)
+			if err != nil {
+				log.Error(err, "Unable to create updated deployment")
 				hogeye.Status.Status = "Error"
 				r.Status().Update(ctx, hogeye)
 				return ctrl.Result{}, err
-			} else {
-				hogeye.Status.Status = "Watching"
+			}
+
+			if !reflect.DeepEqual(deployment.Spec.Template, existingDeployment.Spec.Template) {
+				existingDeployment.Spec = deployment.Spec
+				if err := r.Update(ctx, &existingDeployment); err != nil {
+					// if fail to delete the external dependency here, return with error
+					// so that it can be retried
+					return ctrl.Result{}, err
+				}
+				log.Info("Updated")
+			}
+
+			// VERIFY OUR OTHER CHILD RESOURCES STILL EXIST
+			var existingServiceAccount corev1.ServiceAccount
+
+			serviceAccountKey := client.ObjectKey{
+				Name:      hogeye.Name + "-service-account",
+				Namespace: hogeye.Namespace,
+			}
+
+			if err := r.Get(ctx, serviceAccountKey, &existingServiceAccount); err != nil {
+				if client.IgnoreNotFound(err) == nil {
+					serviceAccount, err := r.createServiceAccount(*hogeye)
+					if err != nil {
+						log.Error(err, "Failed to create service account")
+						return ctrl.Result{}, err
+					} else {
+						if err := controllerutil.SetControllerReference(hogeye, &serviceAccount, r.Scheme); err != nil {
+							return ctrl.Result{}, err
+						}
+					}
+
+					if err := r.Create(ctx, &serviceAccount); err != nil {
+						log.Error(err, "Unable to create Service Account")
+						return ctrl.Result{}, err
+					}
+
+					deployment, err := r.createDeployment(*hogeye)
+					if err != nil {
+						log.Error(err, "Unable to create updated deployment")
+						hogeye.Status.Status = "Error"
+						r.Status().Update(ctx, hogeye)
+						return ctrl.Result{}, err
+					}
+
+					existingDeployment.Spec = deployment.Spec
+					if err := r.Update(ctx, &existingDeployment); err != nil {
+						// if fail to delete the external dependency here, return with error
+						// so that it can be retried
+						return ctrl.Result{}, err
+					}
+				}
+			}
+
+			var existingRole rbacv1.Role
+
+			roleKey := client.ObjectKey{
+				Name:      hogeye.Name + "-pod-role",
+				Namespace: hogeye.Namespace,
+			}
+
+			if err := r.Get(ctx, roleKey, &existingRole); err != nil {
+				if client.IgnoreNotFound(err) == nil {
+					role, err := r.createRole(*hogeye)
+					if err != nil {
+						log.Error(err, "Failed to create role")
+						return ctrl.Result{}, err
+					} else {
+						if err := controllerutil.SetControllerReference(hogeye, &role, r.Scheme); err != nil {
+							return ctrl.Result{}, err
+						}
+					}
+
+					if err := r.Create(ctx, &role); err != nil {
+						log.Error(err, "Unable to create Role")
+						return ctrl.Result{}, err
+					}
+				}
+			}
+
+			var existingRoleBinding rbacv1.RoleBinding
+
+			roleBindingKey := client.ObjectKey{
+				Name:      hogeye.Name + "-pod-role-binding",
+				Namespace: hogeye.Namespace,
+			}
+
+			if err := r.Get(ctx, roleBindingKey, &existingRoleBinding); err != nil {
+				if client.IgnoreNotFound(err) == nil {
+					roleBinding, err := r.createRoleBinding(*hogeye)
+					if err != nil {
+						log.Error(err, "Failed to create rolebinding")
+						return ctrl.Result{}, err
+					} else {
+						if err := controllerutil.SetControllerReference(hogeye, &roleBinding, r.Scheme); err != nil {
+							return ctrl.Result{}, err
+						}
+					}
+
+					if err := r.Create(ctx, &roleBinding); err != nil {
+						log.Error(err, "Unable to create RoleBinding")
+						return ctrl.Result{}, err
+					}
+				}
 			}
 
 			if err := r.Status().Update(ctx, hogeye); err != nil {
 				log.Error(err, "unable to update HogEye status 0")
 				return ctrl.Result{}, err
 			}
-			log.Info("Updated")
 		}
 	} else {
 		hogeye.Status.Status = "Terminating"
@@ -292,6 +384,10 @@ func (r *HogEyeReconciler) createDeployment(hogeye hogv1.HogEye) (appsv1.Deploym
 		},
 	}
 
+	if err := controllerutil.SetControllerReference(&hogeye, deployment, r.Scheme); err != nil {
+		return *deployment, err
+	}
+
 	return *deployment, nil
 }
 
@@ -351,11 +447,11 @@ func (r *HogEyeReconciler) createExternalResources(ctx context.Context, hogeye h
 	if err != nil {
 		log.Error(err, "failed to create Deployment Spec")
 		allErrs = append(allErrs, err)
-	} else {
+	} /*else {
 		if err := controllerutil.SetControllerReference(&hogeye, &deployment, r.Scheme); err != nil {
 			allErrs = append(allErrs, err)
 		}
-	}
+	}*/
 	if err := r.Create(ctx, &deployment); err != nil {
 		log.Error(err, "unable to create Deployment")
 		allErrs = append(allErrs, err)
@@ -435,9 +531,9 @@ func (r *HogEyeReconciler) deleteExternalResources(ctx context.Context, hogeye h
 func (r *HogEyeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hogv1.HogEye{}).
-		// Owns(&corev1.ServiceAccount{}).
-		// Owns(&rbacv1.Role{}).
-		// Owns(&rbacv1.RoleBinding{}).
+		Owns(&corev1.ServiceAccount{}).
+		Owns(&rbacv1.Role{}).
+		Owns(&rbacv1.RoleBinding{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
