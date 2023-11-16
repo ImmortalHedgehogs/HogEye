@@ -19,9 +19,6 @@ spec:
       jsonPath: .status.status
       name: Status
       type: string
-    - jsonPath: .spec.queryResources
-      name: Resource_Type
-      type: string
     - jsonPath: .spec.queryNamespace
       name: Observed_Namespace
       type: string
@@ -58,8 +55,6 @@ spec:
                   Important: Run "make" to regenerate code after modifying this file'
                 type: string
               queryNamespace:
-                type: string
-              queryResources:
                 type: string
               queryTime:
                 type: string

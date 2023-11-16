@@ -30,7 +30,6 @@ type HogEyeSpec struct {
 	AppTokenSecret string `json:"appTokenSecret,omitempty"`
 	SlackChannels  string `json:"slackChannels,omitempty"`
 	QueryNamespace string `json:"queryNamespace,omitempty"`
-	QueryResources string `json:"queryResources,omitempty"`
 	QueryTime      string `json:"queryTime,omitempty"`
 	AgeThreshold   int    `json:"ageThreshold,omitempty"`
 }
@@ -43,7 +42,6 @@ type HogEyeStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`,description="Will display one of [Watching, Redeploying, Terminating, Error]"
-//+kubebuilder:printcolumn:name="Resource_Type",type=string,JSONPath=`.spec.queryResources`
 //+kubebuilder:printcolumn:name="Observed_Namespace",type=string,JSONPath=`.spec.queryNamespace`
 //+kubebuilder:printcolumn:name="Age_Threshold",type=string,JSONPath=`.spec.ageThreshold`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`

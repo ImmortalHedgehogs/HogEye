@@ -17,6 +17,12 @@ rules:
   - update
   - watch
 - apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+- apiGroups:
   - hog.immortal.hedgehogs
   resources:
   - hogeyes
