@@ -2,9 +2,10 @@ apiVersion: hog.immortal.hedgehogs/v1
 kind: HogEye
 metadata:
   name: the-eye
+  namespace: hog
 spec:
   appTokenSecret: "hogeye-secrets"
   slackChannels: "U051DPPFNNT"
-  queryNamespace: default
-  queryTime: "42 14 * * *"
+  queryNamespace: hog
+  queryTime: "59 13 * * *"
   ageThreshold: 0
