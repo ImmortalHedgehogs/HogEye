@@ -22,7 +22,7 @@ async function startCronJob(cronTime, ageThreshold, channel, namespace) {
   cron.schedule(cronTime, async () => {
     pods = await podNeedsRestart(ageThreshold, namespace)
     if (pods.length > 0) {
-      notify(pods, channel, ageThreshold)
+      notify(pods, channel, ageThreshold, namespace)
     }
   }, {
     timezone: "America/Los_Angeles"
@@ -65,11 +65,11 @@ async function podNeedsRestart(ageThreshold, namespace) {
  * Takes a list of all pods that need to be restarted and sends a message to
  * specified channel with that list
  */
-async function notify(pods, channel, ageThreshold) {
+async function notify(pods, channel, ageThreshold, namespace) {
   try {
     await slackApp.client.chat.postMessage({
       channel: channel,
-      text: `The following pods are older than your specified ageThreshold of ${ageThreshold} hours and need to be restarted: ${pods}`
+      text: `The following pods in the ${namespace} namespace are older than your specified ageThreshold of ${ageThreshold.toString()} hours and need to be restarted: ${pods}`
     })
   } catch (err) {
     console.log(`Error notifying channel: ${err}`)

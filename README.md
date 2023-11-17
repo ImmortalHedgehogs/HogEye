@@ -1,8 +1,45 @@
 # hogeye
-// TODO(user): Add simple overview of use/purpose
+The HogEye CR was created to abstract away 99% of the needed yaml to deploy an app that will monitor a namespace in your cluster for old pods and notify you about them for management purposes. 
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+We've created a base app that will be deployed in a container running on a pod that is part of a deployment. This CR also creates a few other sub-resources to assist the app in it's goal of monitoring pods. It creates a service account, role, and role binding with the goal of giving the pod the ability to query the kube controller for the pod resources, along with the previously mentioned deployment.
+
+We give the user the ability to make a yaml which only designates a few fields and accomplishes the goal above. The fields available to the user under spec:
+
+- appTokenSecret <string> : name of the secret which will hold both tokens see "Creating Secrets" below
+
+- slackChannels: <string> : Can be one of two options
+    *  User id of a slack user to send notifications to. (Id is not the same as username. Can be found in user settings)
+    *  Slack channel ID or NAME
+
+- queryNamespace: <string> : The namespace for our app to be monitoring pods in
+
+- queryTime: <string> : Cron job schedule 
+    * If not familiar, Cron jobs use the following format
+        * "minute hour year month day"
+        * ex: "00 13 * * 1-5" <-- schedule is mon-fri at 1pm 
+        * ex: "30 16 * 12 *" <-- schedule is Everyday in Dec at 4:30pm
+        * ex: "45 8 * * *" <-- schedule is everyday of the year at 8:45am
+
+- ageThreshold <int> : Integer representing the age of the pods in hours after which we'd want to get a notification.
+
+## Example HogEye.yaml
+```
+apiVersion: hog.immortal.hedgehogs/v1
+kind: HogEye
+metadata:
+  name: the-eye
+spec:
+  appTokenSecret: "hogeye-secrets"
+  slackChannels: "U051DPPFNNT"
+  queryNamespace: default
+  queryTime: "42 14 * * *"
+  ageThreshold: 0
+```
+
+## Caveats
+Currently due to the use of a role and rolebinding we are only allowing to query for pods in the same namespace that the hogeye resource is deployed to. Be sure to make sure that the query namespace is set to the same namespace that the CR is deployed to.
+
 
 ## Getting Started
 
