@@ -22,6 +22,21 @@ rules:
   - deployments/status
   verbs:
   - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
 - apiGroups:
   - hog.immortal.hedgehogs
   resources:
