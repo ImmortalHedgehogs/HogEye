@@ -17,14 +17,20 @@ limitations under the License.
 package v1
 
 import (
+	"context"
+
+	"github.com/robfig/cron"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // log is for logging in this package.
@@ -80,15 +86,34 @@ func (r *HogEye) ValidateUpdate(old runtime.Object) (admission.Warnings, error) 
 func (r *HogEye) ValidateDelete() (admission.Warnings, error) {
 	hogeyelog.Info("validate delete", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
 }
 
 func (r *HogEye) validateEye() error {
+	// authenticate to cluster so we can query for objects
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+
+	// setting up 
 	var allErrs field.ErrorList
 
-	if r.Spec.SlackChannels[0] != '#' {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), r.Spec.SlackChannels, "Slack channel must start with '#'"))
+	// Validate CRON time
+	if _, err := cron.ParseStandard(r.Spec.QueryTime); err != nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), r.Spec.QueryTime, "QueryTime is invalid. Please verify your QueryTime is a valid Cron time, ex: '0 16 * * 1-5'"))
+	}
+	
+	// Check the secret exists
+	if _, err := clientset.CoreV1().Secrets(r.Namespace).Get(context.TODO(), r.Spec.AppTokenSecret, metav1.GetOptions{}); err != nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), r.Spec.AppTokenSecret, err.Error()))
+	}
+
+	// Check the namespace exists
+	if _, err := clientset.CoreV1().Namespaces().Get(context.TODO(), r.Spec.QueryNamespace, metav1.GetOptions{}); err != nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), r.Spec.QueryNamespace, err.Error()))
 	}
 
 	if len(allErrs) == 0 {
