@@ -54,8 +54,17 @@ If you're running this using ```make run```, make sure to run ```export ENABLE_W
 
 Make sure to install cert-manager to your cluster before running ```make deploy``` using ```kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml```. Also make sure you're specifying an image in your make deploy, like so: ```make deploy IMG=<some-registry>/<project-name>:tag```
 
-### To Deploy on the cluster
+This CR deploys an app that was created by the #immortal Hedgehogs apprentice group at Liatrio. That being said there are app and bot tokens the app need to connect to slack. These are stored on the cluster as a secret that needs to be created beforehand. 
+
+```sh
+kubectl create secret opaque --from-file=appsecret=<file_containing_app_token.txt> --from-file=botsecret=<file_containing_bot_token.txt>
+```
+
+## To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
+
+
+`IMG=<your_registry>/hogeye:tag` as defined below should be set at the top of the make file! This registry will hold the image for your CR's manager. 
 
 ```sh
 make docker-build docker-push IMG=<some-registry>/hogeye:tag
